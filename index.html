@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#050916"/><title>ATLAS · Centro Neuronal V2</title>
+<style>
+:root{color-scheme:dark;--ink:#dceefb;--dim:#7c9cb7;--line:#304967;--cyan:#51e9fc;--green:#58e5a5;--gold:#ffca69;--danger:#ff6580;--violet:#b58afa}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#040915;color:var(--ink);font:500 13px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}button{font:inherit;cursor:pointer;touch-action:manipulation}button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+#screen{height:100dvh;min-height:400px;display:flex;flex-direction:column;background:radial-gradient(ellipse at 50% 48%,#10213a 0%,#07101e 43%,#030812 91%);position:relative;overflow:hidden}
+header{display:flex;justify-content:space-between;align-items:center;min-height:80px;gap:14px;padding:14px clamp(14px,3vw,46px);z-index:3;background:linear-gradient(180deg,#07121feb,transparent);border-bottom:1px solid #2542687a}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}.logo{height:45px;width:45px;border:1px solid #76ddec9a;clip-path:polygon(50% 0,96% 24%,96% 76%,50% 100%,4% 76%,4% 24%);display:grid;place-items:center;box-shadow:inset 0 0 25px #24cfea55;background:#0c2535;color:#69f1ff;font-size:23px;font-weight:900}.brand strong{font-size:clamp(14px,1.45vw,20px);letter-spacing:3px;font-weight:800;display:block}.brand small{color:#80a5c4;letter-spacing:2px;font-size:10px;text-transform:uppercase;display:block}.topright{display:flex;gap:10px;align-items:center}.pill{white-space:nowrap;border:1px solid #3b6480a0;border-radius:99px;padding:7px 12px;background:#0c1b2fb5;font-size:11px;letter-spacing:1px;color:#b2dff2}.liveDot{display:inline-block;height:7px;width:7px;border-radius:50%;background:#ffbd65;box-shadow:0 0 12px #ffbd65;margin-right:8px}.now{color:#9fc5d2}
+main{flex:1;position:relative;min-height:0;overflow:hidden}#view{position:absolute;width:100%;height:100%;touch-action:none;cursor:grab}#view.dragging{cursor:grabbing}.scan{position:absolute;inset:0;pointer-events:none;opacity:.14;background:repeating-linear-gradient(180deg,transparent 0,transparent 3px,#3dc3fd17 4px)}.sideinfo{pointer-events:none;position:absolute;z-index:2;top:22px;left:22px;max-width:305px}.sideinfo h2{margin:0;color:#a7e9fd;font-size:11px;letter-spacing:2.2px}.sideinfo p{margin:7px 0;color:#b5d4e7;font-size:12px}.tag{display:inline-block;background:#0b2542af;border:1px solid #336683;padding:4px 8px;border-radius:4px;color:#9ecde3;letter-spacing:1px;font-size:9px}
+#inspector{position:absolute;z-index:3;right:20px;top:20px;width:min(295px,29%);padding:15px 17px 14px;border:1px solid #3767858c;border-radius:12px;background:linear-gradient(130deg,#061223ee,#0a1b2acb);box-shadow:0 18px 50px #01050a80, inset 0 1px #48718b47;backdrop-filter:blur(8px)}.kicker{font:700 10px/1.2 system-ui;letter-spacing:2px;color:#7debf7}.ititle{margin:8px 0 5px;font-size:15px;font-weight:800}.idesc{font-size:11px;line-height:1.55;color:#a4c0d0;min-height:48px}.ilabel{font-size:9px;color:#7da9c7;letter-spacing:1px;margin-top:10px}.ibar{height:4px;width:100%;background:#23425b;border-radius:3px;margin-top:6px;overflow:hidden}.ibar span{display:block;width:65%;height:100%;background:linear-gradient(90deg,#248de7,#70fff9);box-shadow:0 0 10px #63eefa}
+footer{position:relative;z-index:4;display:flex;flex-direction:column;gap:9px;padding:10px clamp(12px,3vw,46px) max(12px,env(safe-area-inset-bottom));border-top:1px solid #31527180;background:linear-gradient(180deg,#091a2bfa,#07101c)}.toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.toolbar button{border:1px solid #35607d;background:#12273b;color:#d5effc;padding:7px 12px;border-radius:8px;min-height:35px}.toolbar button:hover,.toolbar button.active{background:#173c53;border-color:#74ddeb;color:white}.toolbar button.primary{border-color:#63cddd;background:#135066}.barlabel{color:#90adbf;letter-spacing:1.4px;font-size:10px;margin-right:7px}.sp{flex:1}.status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#8fb6ce;font-size:10px;letter-spacing:.3px}.status strong{color:#c4efff;font-weight:700}.legend{display:flex;gap:11px;flex-wrap:wrap;margin-left:auto}.legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}.telemetry{font-family:ui-monospace,Consolas,monospace;color:#b4e7ec}.mobileHelp{display:none}
+@media(max-width:800px){header{padding:9px 13px;min-height:62px}.brand strong{letter-spacing:1px;font-size:13px}.brand small{font-size:8px;letter-spacing:1px}.logo{width:35px;height:35px;font-size:19px}.pill{font-size:9px;padding:5px 7px}.pill.optional{display:none}.sideinfo{top:9px;left:10px;max-width:145px}.sideinfo h2{font-size:9px;letter-spacing:1px}.sideinfo p{font-size:9px;margin:3px 0}.sideinfo .tag{display:none}#inspector{right:8px;top:8px;width:min(158px,45%);padding:9px;border-radius:9px}.kicker{font-size:8px;letter-spacing:1px}.ititle{font-size:11px;margin:4px 0}.idesc{font-size:9px;min-height:36px}.ilabel{margin-top:4px}.toolbar{gap:5px}.toolbar button{font-size:10px;padding:6px 8px;min-height:32px}.status{font-size:9px}.legend{display:none}footer{padding:7px 9px max(8px,env(safe-area-inset-bottom))}.mobileHelp{display:inline;color:#7aa6bb;font-size:9px}}
+@media(max-height:540px){.sideinfo{display:none}header{min-height:50px;padding-top:4px;padding-bottom:4px}footer{gap:4px;padding-top:4px;padding-bottom:4px}.status{display:none}}
+</style></head>
+<body><div id="screen"><header><div class="brand"><div class="logo">A</div><div><strong>ATLAS <span style="color:#66e9ee">CORE OS</span></strong><small>CENTRO NEURONAL · PROTOTIPO V2</small></div></div><div class="topright"><span class="pill optional">12 DEPARTAMENTOS CONECTADOS</span><span class="pill"><span class="liveDot" id="modeDot"></span><span id="modeLabel">MODO DEMOSTRACIÓN</span></span></div></header>
+<main id="main"><canvas id="view" aria-label="Centro Neuronal interactivo con cerebro de partículas y doce oficinas de Atlas"></canvas><div class="scan"></div><aside class="sideinfo"><h2>INTELIGENCIA DISTRIBUIDA</h2><p>Un núcleo. Doce departamentos.<br/>Un circuito de información.</p><span class="tag">RECIBE → RAZONA → VALIDA → REDISTRIBUYE</span></aside><section id="inspector" aria-live="polite"><div class="kicker" id="inspectionType">NÚCLEO INTELIGENTE</div><div class="ititle" id="inspectionName">Cerebro neuronal</div><div class="idesc" id="inspectionDesc">Red de partículas 3D en rotación. Selecciona una oficina o sigue una transmisión para consultar su función.</div><div class="ilabel" id="phaseLabel">ESTADO · SINCRONIZACIÓN</div><div class="ibar"><span id="phaseBar"></span></div></section></main>
+<footer><div class="toolbar"><span class="barlabel">CONTROL NEURONAL</span><button class="primary" id="event">⚡ Evento de prueba</button><button id="enter">◎ Entrar al cerebro</button><button id="pause">Ⅱ Pausar</button><button id="auto">◉ Giro 3D</button><button id="less">−</button><button id="more">＋</button><button id="reset">⤢ Plano general</button><span class="sp"></span><button id="quality">Calidad: alta</button><button id="demo">Demo: activa</button></div><div class="status"><span class="telemetry" id="displayEvent">SIMULACIÓN VISUAL · EVENTO DEMO PENDIENTE</span><span class="mobileHelp">Arrastra para mover · Pellizca para ampliar</span><div class="legend"><span><i style="background:#51e9fc"></i>Mercados</span><span><i style="background:#b58afa"></i>IA</span><span><i style="background:#ffc66b"></i>Pruebas</span><span><i style="background:#64eeb0"></i>Validación</span><span><i style="background:#ff677e"></i>Riesgos</span></div></div></footer></div>
+<script>
+/* Atlas Neural Core V2 — autónomo, sin dependencias externas. Visualización demo hasta conectar a eventos del backend. */
+(()=>{'use strict';
+const canvas=document.getElementById('view'), ctx=canvas.getContext('2d',{alpha:false});
+const W=1600,H=970, C={x:800,y:515}, TWO=Math.PI*2;
+const $=id=>document.getElementById(id);
+const COLORS={cyan:'#5ee9fe',violet:'#c29aff',orange:'#ffbf6e',green:'#6af6b5',red:'#ff6388',yellow:'#f9e978',white:'#eefaff'};
+const OFFICES=[
+{id:'noticias',name:'NOTICIAS',role:'Lectura, contraste y distribución de novedades con fuente y hora.',col:'cyan',x:240,y:218,workers:2,icon:'NEWS'},
+{id:'investigacion',name:'INVESTIGACIÓN',role:'Investiga hipótesis, comprueba fuentes y crea expedientes.',col:'violet',x:460,y:350,workers:2,icon:'RESEARCH'},
+{id:'mercados',name:'MERCADOS',role:'Observa cotizaciones, velas, liquidez y calidad de datos.',col:'cyan',x:240,y:493,workers:2,icon:'MARKET'},
+{id:'telegram',name:'TELEGRAM',role:'Recibe entradas externas y las envía a revisión.',col:'cyan',x:460,y:640,workers:1,icon:'BOT'},
+{id:'incubadora',name:'INCUBADORA',role:'Ejecuta hipótesis, pruebas históricas y simulaciones en papel.',col:'orange',x:240,y:770,workers:3,icon:'LAB'},
+{id:'academia',name:'ACADEMIA',role:'Cataloga conocimiento contrastado y lecciones de pruebas.',col:'violet',x:460,y:870,workers:1,icon:'LEARN'},
+{id:'direccion',name:'DIRECCIÓN',role:'Orquesta solicitudes, especialistas y decisiones.',col:'violet',x:1140,y:218,workers:2,icon:'EXEC'},
+{id:'cuantitativo',name:'CUANTITATIVO',role:'Contrasta estadística, modelos y condiciones de mercado.',col:'orange',x:1360,y:350,workers:2,icon:'QUANT'},
+{id:'riesgos',name:'RIESGOS',role:'Valida límites, exposición, costes y posibilidad de bloqueo.',col:'red',x:1140,y:493,workers:2,icon:'RISK'},
+{id:'trading',name:'TRADING',role:'Gestiona señales y ejecución simulada bajo autorización.',col:'green',x:1360,y:640,workers:2,icon:'TRADE'},
+{id:'auditoria',name:'AUDITORÍA',role:'Verifica trazabilidad, resultados y aprendizaje verificable.',col:'yellow',x:1140,y:770,workers:2,icon:'AUDIT'},
+{id:'mantenimiento',name:'MANTENIMIENTO',role:'Observa errores, integridad y recuperación de procesos.',col:'cyan',x:1360,y:870,workers:1,icon:'SYSTEM'}
+];
+const byId=Object.fromEntries(OFFICES.map(o=>[o.id,o]));
+let seed=871642; const rnd=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t;
+const hexRGB=s=>{s=s.replace('#','');return [parseInt(s.slice(0,2),16),parseInt(s.slice(2,4),16),parseInt(s.slice(4,6),16)]};
+function alpha(hex,a){let q=hexRGB(hex);return `rgba(${q[0]},${q[1]},${q[2]},${clamp(a,0,1)})`}
+const state={last:performance.now(),t:0,run:true,spin:true,demo:true,quality:1,zoom:1,offsetX:0,offsetY:0,targetZoom:1,targetX:0,targetY:0,brainInside:false,phase:'SINCRONIZACIÓN',chosen:null,mode:'DEMO',event:null,eventStart:0,eventNumber:0,cycleAt:0,pointerDown:new Map(),dragged:false};
+const nodes=[],edges=[],stars=[];
+// Superficie de dos hemisferios con surcos/fisura y lóbulos. Las propias partículas forman la anatomía.
+for(let h=0;h<2;h++) for(let i=0;i<1025;i++){
+ let u=rnd()*TWO,v=Math.acos(2*rnd()-1),n=rnd(), side=h?1:-1;
+ let lobulation=1+.075*Math.sin(8*u+4*v)+.042*Math.cos(14*u-7*v)+.031*Math.sin(24*v+u*3);
+ let lat=Math.sin(v),yy=Math.cos(v); let inset=1-.23*Math.exp(-Math.pow(lat*Math.cos(u)+.12,2)/.015);
+ let x=side*(.22+.73*lat*Math.abs(Math.cos(u)))*lobulation;
+ let y=.92*yy*lobulation+.06*Math.cos(3*u+v);
+ let z=.79*lat*Math.sin(u)*lobulation*inset;
+ // Línea media profundamente dividida y pequeños surcos internos
+ x+=side*.038*Math.sin(11*v+u*4);y+=.019*Math.sin(u*17-v*8);
+ let interior=n<.14, factor=interior?rnd()*.75:.96+rnd()*.06;
+ let colorIndex= rnd(); let color=colorIndex<.43?'cyan':colorIndex<.71?'violet':colorIndex<.79?'orange':colorIndex<.88?'green':colorIndex<.95?'yellow':'red';
+ nodes.push({x:x*factor,y:y*factor,z:z*factor,color,phase:rnd()*TWO,energy:rnd(),h});
+}
+// Vecindad espacial local, filamentos finos entre nodos (no efectos pegados a una imagen).
+const buckets=new Map(),scale=3.5,key=(x,y,z)=>`${x}|${y}|${z}`;
+for(let i=0;i<nodes.length;i++){let a=nodes[i], k=key(Math.floor(a.x*scale),Math.floor(a.y*scale),Math.floor(a.z*scale));if(!buckets.has(k))buckets.set(k,[]);buckets.get(k).push(i)}
+for(let i=0;i<nodes.length;i++){
+ let a=nodes[i],bx=Math.floor(a.x*scale),by=Math.floor(a.y*scale),bz=Math.floor(a.z*scale), near=[];
+ for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)for(let dz=-1;dz<=1;dz++){
+  for(const j of (buckets.get(key(bx+dx,by+dy,bz+dz))||[])){if(j<=i)continue;let b=nodes[j];let dd=(a.x-b.x)**2+(a.y-b.y)**2+(a.z-b.z)**2;if(dd<.09)near.push([dd,j]);}
+ }
+ near.sort((a,b)=>a[0]-b[0]);for(let k=0;k<Math.min(3,near.length);k++)edges.push([i,near[k][1],rnd()]);
+}
+for(let i=0;i<175;i++)stars.push({x:rnd()*W,y:rnd()*H,r:rnd()*1.5,p:rnd()*TWO});
+let cw=1,ch=1,dpr=1,fit=1;
+function resize(){let r=canvas.getBoundingClientRect();cw=r.width;ch=r.height;dpr=Math.min(devicePixelRatio||1,state.quality?1.7:1.15);canvas.width=Math.ceil(cw*dpr);canvas.height=Math.ceil(ch*dpr);fit=Math.min(cw/W,ch/H)}
+window.addEventListener('resize',resize);resize();if(window.innerWidth<700){state.zoom=state.targetZoom=2.15;}
+function circ(x,y,r,color,opacity=1){ctx.beginPath();ctx.arc(x,y,r,0,TWO);ctx.fillStyle=opacity===1?color:alpha(color,opacity);ctx.fill()}
+function line(x,y,x2,y2,color,width=1){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x2,y2);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke()}
+function roundRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r)}
+function setShadow(color,blur){ctx.shadowColor=color;ctx.shadowBlur=blur}
+function text(str,x,y,size=12,color='#cee4f7',align='left',weight=500){ctx.font=`${weight} ${size}px system-ui, sans-serif`;ctx.textAlign=align;ctx.fillStyle=color;ctx.fillText(str,x,y)}
+function bg(t){ctx.fillStyle='#040915';ctx.fillRect(0,0,W,H);let grad=ctx.createRadialGradient(800,500,80,800,500,730);grad.addColorStop(0,'#173449');grad.addColorStop(.45,'#0a1a2e');grad.addColorStop(1,'#040913');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+ for(const s of stars){let f=.27+.5*(.5+.5*Math.cos(t*.45+s.p));circ(s.x,s.y,s.r,'#83bad9',f)}
+ ctx.strokeStyle='#0d2c45';ctx.lineWidth=1;for(let y=5;y<H;y+=38){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}for(let x=0;x<W;x+=44){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+ // estadio / sala de control, integrada con circuitería radial
+ for(let rr of [248,284,340,397]){ctx.beginPath();ctx.ellipse(C.x,C.y,rr,rr*.82,0,0,TWO);ctx.strokeStyle=alpha('#55b7d2',rr===248?.23:.10);ctx.lineWidth=rr===248?2:1;ctx.stroke()}
+ ctx.save();ctx.translate(C.x,C.y);ctx.rotate(t*.008);ctx.setLineDash([4,20]);ctx.beginPath();ctx.ellipse(0,0,380,310,0,0,TWO);ctx.strokeStyle='#4dd9ec55';ctx.lineWidth=2;ctx.stroke();ctx.restore();ctx.setLineDash([]);
+ ctx.fillStyle='#062538bb';roundRect(666,824,268,46,15);ctx.fill();ctx.strokeStyle='#386e8e90';ctx.stroke();text('ATLAS / INTELLIGENCE MATRIX',800,844,11,'#7adfee','center',700);text('MULTIAGENT · CORE OS',800,859,9,'#8eaec7','center',600);
+}
+function connector(o,t){let from={x:o.x,y:o.y},sx=o.x<C.x?o.x+102:o.x-102,sy=o.y+16;
+ let a=Math.atan2(sy-C.y,sx-C.x);let end={x:C.x+Math.cos(a)*215,y:C.y+Math.sin(a)*158};
+ ctx.beginPath();ctx.moveTo(sx,sy);ctx.bezierCurveTo(lerp(sx,C.x,.38),sy,lerp(end.x,C.x,.2),end.y,end.x,end.y);
+ ctx.strokeStyle=alpha(COLORS[o.col],.17);ctx.lineWidth=2;ctx.stroke();
+ circ(sx,sy,4,COLORS[o.col],.38);return{sx,sy,x:end.x,y:end.y,a};
+}
+function bezier(p0,p1,p2,p3,t){let f=1-t;return{x:f*f*f*p0.x+3*f*f*t*p1.x+3*f*t*t*p2.x+t*t*t*p3.x,y:f*f*f*p0.y+3*f*f*t*p1.y+3*f*t*t*p2.y+t*t*t*p3.y}}
+function packetRoute(o,reverse,prog,color,bright=1){let cn=connectorPath(o), p0={x:cn.sx,y:cn.sy},p3={x:cn.x,y:cn.y},p1={x:lerp(cn.sx,C.x,.38),y:cn.sy},p2={x:lerp(cn.x,C.x,.2),y:cn.y};
+ let q=reverse?1-prog:prog;
+ ctx.beginPath();for(let k=0;k<=25;k++){let pt=bezier(p0,p1,p2,p3,k/25);if(k===0)ctx.moveTo(pt.x,pt.y);else ctx.lineTo(pt.x,pt.y)}ctx.lineWidth=3;ctx.strokeStyle=alpha(color,.28*bright);setShadow(color,10);ctx.stroke();setShadow('transparent',0);
+ for(let j=0;j<9;j++){let f=q-j*.027;if(f<0||f>1)continue;let p=bezier(p0,p1,p2,p3,f);circ(p.x,p.y,Math.max(1.3,4-j*.25),color,.9-j*.08);if(j===0){setShadow(color,25);circ(p.x,p.y,5.5,'#f5ffff',.92);setShadow('transparent',0)}}
+}
+function connectorPath(o){let sx=o.x<C.x?o.x+102:o.x-102,sy=o.y+16,a=Math.atan2(sy-C.y,sx-C.x);return{sx,sy,x:C.x+Math.cos(a)*215,y:C.y+Math.sin(a)*158}}
+function worker(x,y,i,t,col){let active=state.run?1:0,turn=t*(.65+i*.11)+i*1.6;
+ // escritorio flotante con terminal
+ ctx.fillStyle='#133044';ctx.beginPath();ctx.ellipse(x+4,y+17,30,10,-.08,0,TWO);ctx.fill();ctx.strokeStyle='#3e6d81';ctx.lineWidth=1;ctx.stroke();
+ ctx.fillStyle='#071928';roundRect(x+5,y-13,32,24,2);ctx.fill();ctx.strokeStyle=alpha(col,.7);ctx.stroke();
+ for(let q=0;q<3;q++){line(x+9,y-8+q*5,x+28-4*q,y-8+q*5,alpha(col,.65),1.5)}
+ // silueta de operario: cuerpo, cabeza, brazos articulados animados
+ let bob=Math.sin(turn*1.4)*1.7*active;ctx.fillStyle='#1b3e5b';ctx.beginPath();ctx.ellipse(x-12,y+13+bob,10,12,-.18,0,TWO);ctx.fill();
+ ctx.strokeStyle='#63acc9';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x-11,y-7+bob,6.7,0,TWO);ctx.stroke();circ(x-11,y-7+bob,5.6,'#255779',1);
+ ctx.strokeStyle=alpha(col,.85);ctx.lineWidth=2;line(x-8,y+6+bob,x+3,y+10+Math.sin(turn*2.3)*4*active,alpha(col,.85),2);
+ line(x-16,y+8+bob,x-22,y+19+Math.cos(turn*2)*3*active,'#5b9bb5',2);
+ circ(x+1,y+10,2.1,col,.72);
+}
+function office(o,t){const w=195,h=140,x=o.x-w/2,y=o.y-h/2,col=COLORS[o.col];const sel=state.chosen===o.id;const e=state.event,active=e&&(e.from===o.id||e.to?.includes(o.id));
+ // plataforma y volumen, dibujo en perspectiva pseudoisométrica
+ ctx.fillStyle='#00040bcc';ctx.beginPath();ctx.ellipse(o.x,o.y+77,w*.62,24,0,0,TWO);ctx.fill();
+ ctx.beginPath();ctx.moveTo(x-4,y+13);ctx.lineTo(x+10,y-8);ctx.lineTo(x+w+7,y-8);ctx.lineTo(x+w-4,y+13);ctx.closePath();ctx.fillStyle='#153049';ctx.fill();ctx.strokeStyle=alpha(col,active?.9:.42);ctx.stroke();
+ let g=ctx.createLinearGradient(x,y,x+w,y+h);g.addColorStop(0,'#102a42ee');g.addColorStop(.53,'#09192ceb');g.addColorStop(1,'#071323dd');ctx.fillStyle=g;roundRect(x,y,w,h,9);ctx.fill();ctx.strokeStyle=alpha(col,sel||active?.92:.53);ctx.lineWidth=sel?2.6:1.4;ctx.stroke();
+ // cristaleras / marcos / zócalo
+ ctx.fillStyle='#1a557021';ctx.fillRect(x+6,y+27,w-12,h-35);ctx.strokeStyle='#4b789045';ctx.lineWidth=1;line(x+6,y+26,x+w-6,y+26,'#8dd9e955');line(x+10,y+h-10,x+w-10,y+h-10,alpha(col,.4),2);
+ ctx.fillStyle=alpha(col,.11);roundRect(x+8,y+7,w-16,19,4);ctx.fill();
+ circ(x+16,y+17,3.4,col,active?.95:.65);text(o.name,x+27,y+20,12,'#e5f7ff','left',800);
+ // ventanas posteriores, doble monitor, métricas cambiantes
+ for(let k=0;k<2;k++){let bx=x+20+k*72,by=y+36;ctx.fillStyle='#051b2a';roundRect(bx,by,60,28,3);ctx.fill();ctx.strokeStyle='#315b73';ctx.stroke();ctx.beginPath();for(let j=0;j<14;j++){let yy=by+17+Math.sin(j*.82+t*.25+k*2.2+o.x)*5+Math.cos(j*1.5+t*.11)*2;if(j===0)ctx.moveTo(bx+3+j*4,yy);else ctx.lineTo(bx+3+j*4,yy)}ctx.strokeStyle=alpha(col,.7);ctx.lineWidth=1.3;ctx.stroke()}
+ // operarios a escala, gesto variado, luces de puestos
+ for(let i=0;i<o.workers;i++)worker(x+29+(i%3)*60,y+91+Math.floor(i/3)*12,i+o.x*.01,t,col);
+ ctx.fillStyle=alpha(col,.08);ctx.fillRect(x+7,y+h-7,w-14,4);
+ if(active||sel){setShadow(col,19);ctx.strokeStyle=alpha(col,active?.9:.67);ctx.lineWidth=2;roundRect(x-1,y-1,w+2,h+2,10);ctx.stroke();setShadow('transparent',0)}
+}
+const basePts=new Array(nodes.length);
+function drawBrain(t){let z=state.zoom, size=189,rotY=t*.16+.26,rotX=.15*Math.sin(t*.11)+.08, rotZ=.075*Math.sin(t*.13);
+ // atmósfera volumétrica detrás del cerebro
+ let g=ctx.createRadialGradient(C.x,C.y,13,C.x,C.y,257);g.addColorStop(0,'#4970d220');g.addColorStop(.42,'#5a24d120');g.addColorStop(1,'#050c1900');ctx.fillStyle=g;ctx.beginPath();ctx.arc(C.x,C.y,257,0,TWO);ctx.fill();
+ // Esferas orbitantes / anillos de flujo vivo
+ for(let a=0;a<3;a++){ctx.save();ctx.translate(C.x,C.y);ctx.rotate(-.20+t*.021*(a%2?1:-1)+a*.73);ctx.beginPath();ctx.ellipse(0,0,237+a*14,130+a*18,0,0,TWO);ctx.strokeStyle=alpha(a===1?COLORS.violet:COLORS.cyan,.17);ctx.lineWidth=1.4;ctx.stroke();ctx.restore()}
+ // Superficie cerebral 3D calculada cada fotograma, con perspectiva.
+ let ca=Math.cos(rotY),sa=Math.sin(rotY),cx=Math.cos(rotX),sx=Math.sin(rotX),cz=Math.cos(rotZ),sz=Math.sin(rotZ);
+ for(let i=0;i<nodes.length;i++){
+  const n=nodes[i];let x=n.x*ca+n.z*sa,z=-n.x*sa+n.z*ca;
+  let y=n.y*cx-z*sx;z=n.y*sx+z*cx;
+  let q=x*cz-y*sz; y=x*sz+y*cz;x=q;
+  let p=3.8/(3.8-z);
+  basePts[i]={x:C.x+x*size*p,y:C.y+y*size*p,z,scale:p,col:COLORS[n.color],n};
+ }
+ const maxEdges=state.quality?edges.length:Math.floor(edges.length*.45);
+ ctx.lineWidth=.75;
+ for(let k=0;k<maxEdges;k++){
+  let [i,j,val]=edges[k],a=basePts[i],b=basePts[j],depth=clamp((a.z+b.z+2)/4,.1,.9);
+  let pulse=(.5+.5*Math.sin(t*1.4+val*40))*state.run;
+  let opacity=clamp(.075+depth*.20+pulse*.07,.04,.36);
+  line(a.x,a.y,b.x,b.y,alpha(a.col,opacity),.60+depth*.6);
+ }
+ const skip=state.quality?1:2;
+ for(let i=0;i<basePts.length;i+=skip){const p=basePts[i],n=p.n,depth=clamp((p.z+1.4)/3.0,.08,1),pulse=.5+.5*Math.sin(t*2.8+n.phase*3);
+  let r=(.7+depth*.95+(n.energy>.94?1.2:0))*(state.brainInside?1.12:1);
+  if(n.energy>.966&&depth>.5){setShadow(p.col,11);circ(p.x,p.y,r*1.85,p.col,.35+pulse*.45);setShadow('transparent',0)}
+  circ(p.x,p.y,r,p.col,.4+depth*.5+pulse*.12);
+ }
+ // Capas corticales de datos que se desplazan dentro de la anatomía
+ for(let i=0;i<25;i++){let n=basePts[(i*83+Math.floor(t*6)%nodes.length)%nodes.length];setShadow(n.col,16);circ(n.x,n.y,2.5+Math.sin(t*2+i)*1.4,n.col,.7);setShadow('transparent',0)}
+ // Fisura interhemisférica sutil e iluminación de base
+ ctx.beginPath();ctx.ellipse(C.x,C.y+173,125,17,0,0,TWO);ctx.fillStyle='#3be4f01b';ctx.fill();
+ text('NÚCLEO NEURONAL / VISUALIZACIÓN 3D',C.x,C.y-242,12,'#c5f7fd','center',800);
+ text('RED DE PARTÍCULAS · MULTICOLOR · FLUJO DIRECCIONAL',C.x,C.y+246,10,'#85b4c9','center',600);
+}
+function updateEvent(dt){if(!state.run)return;let tm=performance.now();if(state.event){const age=tm-state.eventStart;if(age>=6100){state.event=null;state.cycleAt=tm+1800;$('displayEvent').textContent='SIMULACIÓN VISUAL · ESPERANDO NUEVO EJEMPLO';state.phase='SINCRONIZACIÓN'}else if(age<1450)state.phase='RECEPCIÓN';else if(age<3300)state.phase='ANÁLISIS / CONTRASTE';else if(age<5500)state.phase='DISTRIBUCIÓN';else state.phase='REGISTRO';$('phaseLabel').textContent='ESTADO · '+state.phase;$('phaseBar').style.width=`${Math.floor(clamp(age/6100,0,1)*100)}%`}
+ else if(state.demo&&tm>state.cycleAt)spawnDemoEvent();}
+const SCENARIOS=[
+ {from:'noticias',to:['investigacion','riesgos'],type:'cyan',title:'NOTICIA CON NUEVA INFORMACIÓN',detail:'Noticias → Centro Neuronal → Investigación + Riesgos. Ejemplo no conectado a la bolsa.'},
+ {from:'incubadora',to:['cuantitativo','auditoria'],type:'orange',title:'SIMULACIÓN FINALIZADA',detail:'Incubadora → Centro Neuronal → Cuantitativo + Auditoría. Datos ficticios.'},
+ {from:'cuantitativo',to:['riesgos','direccion'],type:'violet',title:'HIPÓTESIS PARA VALIDAR',detail:'Cuantitativo → Centro Neuronal → Riesgos + Dirección. Ejemplo visual.'},
+ {from:'riesgos',to:['trading','auditoria'],type:'red',title:'RIESGO · OPERACIÓN BLOQUEADA',detail:'Riesgos → Centro Neuronal → Trading + Auditoría. Bloqueo ilustrativo.'},
+ {from:'telegram',to:['noticias','investigacion'],type:'cyan',title:'DATO EXTERNO EN REVISIÓN',detail:'Telegram → Centro Neuronal → Noticias + Investigación. Entrada ilustrativa.'},
+ {from:'mantenimiento',to:['direccion','auditoria'],type:'green',title:'DIAGNÓSTICO COMPLETADO',detail:'Mantenimiento → Centro Neuronal → Dirección + Auditoría. Ejemplo.'},
+ {from:'mercados',to:['cuantitativo','incubadora'],type:'cyan',title:'VELA NUEVA ANALIZABLE',detail:'Mercados → Centro Neuronal → Cuantitativo + Incubadora. Sin datos bursátiles en vivo.'},
+ {from:'auditoria',to:['academia','direccion'],type:'yellow',title:'REVISIÓN Y APRENDIZAJE',detail:'Auditoría → Centro Neuronal → Academia + Dirección. No supone aprendizaje real.'},
+];
+function report(e,mode){state.event=e;state.eventStart=performance.now();state.mode=mode;state.phase='RECEPCIÓN';$('displayEvent').textContent=`${mode} · ${e.title} · ${e.from.toUpperCase()} → ${e.to.join(', ').toUpperCase()}`;$('inspectionType').textContent=mode==='DEMO'?'TRANSMISIÓN SIMULADA':'EVENTO DEL SISTEMA';$('inspectionName').textContent=e.title;$('inspectionDesc').textContent=e.detail;$('phaseLabel').textContent='ESTADO · RECEPCIÓN';$('modeLabel').textContent=mode==='DEMO'?'MODO DEMOSTRACIÓN':'DATOS EXTERNOS · SIN VERIFICAR';$('modeDot').style.background=mode==='DEMO'?'#ffbd65':'#75e6c2'}
+function spawnDemoEvent(){if(!state.demo)return;let e=SCENARIOS[state.eventNumber++%SCENARIOS.length];report(e,'DEMO')}
+function drawRoute(t){let e=state.event;if(!e)return;let age=(performance.now()-state.eventStart)/1000;if(!state.run)age=state.eventFrozenAge||age;let color=COLORS[e.type]||COLORS.cyan;
+ if(age<3.2){let prog=clamp((age-.1)/1.5,0,1);packetRoute(byId[e.from],false,prog,color,1)}
+ if(age>1.2&&age<4){let density=12;for(let i=0;i<density;i++){let a=(t*2+i*TWO/density);let rr=30+(i*137)%174;let x=C.x+Math.cos(a*2)*rr,y=C.y+Math.sin(a*1.6)*rr*.78;circ(x,y,2.5,color,.3+.35*Math.sin(t*3+i)**2)}}
+ if(age>2.7){let prog=clamp((age-2.65)/1.75,0,1);for(let j=0;j<e.to.length;j++)if(byId[e.to[j]])packetRoute(byId[e.to[j]],true,clamp(prog-j*.17,0,1),color,.9)}
+}
+function selection(t){if(state.chosen&&byId[state.chosen]){let o=byId[state.chosen];let color=COLORS[o.col];ctx.setLineDash([4,6]);ctx.beginPath();ctx.arc(o.x,o.y,118+Math.sin(t*2)*4,0,TWO);ctx.strokeStyle=alpha(color,.35);ctx.lineWidth=1.5;ctx.stroke();ctx.setLineDash([])}}
+function drawScene(t){bg(t);for(let o of OFFICES)connector(o,t);for(let o of OFFICES)office(o,t);drawBrain(t);drawRoute(t);selection(t)}
+function paint(now){let dt=Math.min(.05,(now-state.last)/1000);state.last=now;if(state.run)state.t+=dt;updateEvent(dt);state.zoom=lerp(state.zoom,state.targetZoom,.11);state.offsetX=lerp(state.offsetX,state.targetX,.11);state.offsetY=lerp(state.offsetY,state.targetY,.11);
+ ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#030712';ctx.fillRect(0,0,cw,ch);ctx.save();let sc=fit*state.zoom;ctx.translate(cw/2+state.offsetX*fit,ch/2+state.offsetY*fit);ctx.scale(sc,sc);ctx.translate(-W/2,-H/2);drawScene(state.t);ctx.restore();requestAnimationFrame(paint)}
+function toScene(e){let r=canvas.getBoundingClientRect(),xx=e.clientX-r.left,yy=e.clientY-r.top;let sc=fit*state.zoom;return{x:(xx-cw/2-state.offsetX*fit)/sc+W/2,y:(yy-ch/2-state.offsetY*fit)/sc+H/2}}
+function choose(x,y){if(Math.abs(x-C.x)<220&&Math.abs(y-C.y)<195){state.chosen=null; $('inspectionType').textContent='NÚCLEO INTELIGENTE';$('inspectionName').textContent='Cerebro de partículas';$('inspectionDesc').textContent='Gira en tres dimensiones, recibe flujos y activa regiones según el ejemplo. Pulsa «Entrar al cerebro» para acercarte.';return}
+ for(let o of OFFICES){if(Math.abs(x-o.x)<100&&Math.abs(y-o.y)<73){state.chosen=o.id;$('inspectionType').textContent='DEPARTAMENTO ATLAS';$('inspectionName').textContent=o.name;$('inspectionDesc').textContent=o.role+` ${o.workers} trabajadores animados en esta representación.`;return}}}
+// Navegación con ratón, arrastre, rueda, gestos de pellizco y toque.
+let lastDist=0;
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);state.pointerDown.set(e.pointerId,{x:e.clientX,y:e.clientY});state.dragged=false;canvas.classList.add('dragging')});
+canvas.addEventListener('pointermove',e=>{let previous=state.pointerDown.get(e.pointerId);if(!previous)return;let dx=e.clientX-previous.x,dy=e.clientY-previous.y;if(Math.abs(dx)+Math.abs(dy)>2)state.dragged=true;state.pointerDown.set(e.pointerId,{x:e.clientX,y:e.clientY});if(state.pointerDown.size===1){state.targetX=clamp(state.targetX+dx/fit,-540,540);state.targetY=clamp(state.targetY+dy/fit,-350,350)}else if(state.pointerDown.size===2){let p=[...state.pointerDown.values()],dist=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);if(lastDist)state.targetZoom=clamp(state.targetZoom*dist/lastDist,.8,3.3);lastDist=dist}});
+function pointerUp(e){let p=state.pointerDown.get(e.pointerId);state.pointerDown.delete(e.pointerId);lastDist=0;if(!state.dragged){let loc=toScene(e);choose(loc.x,loc.y)}if(!state.pointerDown.size)canvas.classList.remove('dragging')}
+canvas.addEventListener('pointerup',pointerUp);canvas.addEventListener('pointercancel',e=>{state.pointerDown.delete(e.pointerId);lastDist=0;canvas.classList.remove('dragging')});
+canvas.addEventListener('wheel',e=>{e.preventDefault();state.targetZoom=clamp(state.targetZoom*Math.exp(-e.deltaY*.001),.7,3.3)},{passive:false});
+$('event').addEventListener('click',()=>{state.demo=true;$('demo').textContent='Demo: activa';spawnDemoEvent()});
+$('pause').addEventListener('click',()=>{state.run=!state.run;$('pause').textContent=state.run?'Ⅱ Pausar':'▶ Reanudar';if(state.run){state.eventStart=performance.now();state.event=null;state.cycleAt=performance.now()+1000}});
+$('enter').addEventListener('click',()=>{state.brainInside=!state.brainInside;state.targetZoom=state.brainInside?2.65:1;state.targetX=0;state.targetY=0;$('enter').textContent=state.brainInside?'↩ Salir del cerebro':'◎ Entrar al cerebro';choose(C.x,C.y)});
+$('auto').addEventListener('click',()=>{state.spin=!state.spin;$('auto').textContent=state.spin?'◉ Giro 3D':'○ Giro detenido'});
+$('less').addEventListener('click',()=>{state.targetZoom=clamp(state.targetZoom/1.2,.7,3.3)});
+$('more').addEventListener('click',()=>{state.targetZoom=clamp(state.targetZoom*1.2,.7,3.3)});
+$('reset').addEventListener('click',()=>{state.brainInside=false;state.targetZoom=1;state.targetX=0;state.targetY=0;$('enter').textContent='◎ Entrar al cerebro'});
+$('quality').addEventListener('click',()=>{state.quality=1-state.quality;$('quality').textContent=state.quality?'Calidad: alta':'Calidad: ahorro';resize()});
+$('demo').addEventListener('click',()=>{state.demo=!state.demo;state.event=null;state.cycleAt=performance.now()+1500;$('demo').textContent=state.demo?'Demo: activa':'Demo: apagada';$('modeLabel').textContent=state.demo?'MODO DEMOSTRACIÓN':'ESPERANDO EVENTOS';$('displayEvent').textContent=state.demo?'DEMOSTRACIÓN REANUDADA':'SIN EVENTOS AUTOMÁTICOS · A LA ESPERA DE DATOS';});
+// Giro controlable: se puede congelar ángulo cuando no hay auto giro.
+const origDrawBrain=drawBrain;
+// En modo giro detenido se congela el tiempo cerebral, pero siguen las comunicaciones y trabajadores.
+// Se congela el ángulo en la proyección con un reloj acumulado independiente.
+let brainClock=0,brainClockPrev=performance.now();drawBrain=function(t){let current=performance.now();let sec=Math.min(.05,(current-brainClockPrev)/1000);brainClockPrev=current;if(state.spin&&state.run)brainClock+=sec;origDrawBrain(brainClock)};
+// Contrato de integración: únicamente los eventos enviados por el backend deben aparecer como eventos reales.
+window.ATLAS_NEURAL={
+ version:'2.0.0-prototype',
+ pushEvent(payload){
+  if(!payload||typeof payload!=='object'||!byId[payload.from]||!Array.isArray(payload.to)||!payload.to.length||!payload.to.every(id=>!!byId[id]))return false;
+  let type=Object.hasOwn(COLORS,payload.type)?payload.type:'violet';let safe=s=>String(s||'').slice(0,125).replace(/[<>]/g,'');
+  state.demo=false;$('demo').textContent='Demo: apagada';report({from:payload.from,to:payload.to.slice(0,6),type,title:safe(payload.title||'Evento del sistema'),detail:safe(payload.detail||'Evento suministrado por integración pendiente de validar')},'EXTERNO');return true;
+ },
+ getDepartments(){return OFFICES.map(o=>({id:o.id,name:o.name}))},
+ getStatus(){return {mode:state.mode,selected:state.chosen,view:'neural-core-v2',running:state.run}}
+};
+state.cycleAt=performance.now()+1450;
+requestAnimationFrame(paint);
+})();
+</script></body></html>
