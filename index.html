@@ -263,6 +263,11 @@ header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px
 
 
 
+
+
+
+
+
 /* AURA-CSS */
 /* ===== ASISTENTE "AURA": avatar + voz ===== */
 .aura-orb{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));z-index:60;width:68px;height:68px;border-radius:50%;border:0;padding:0;background:transparent;cursor:pointer;
@@ -2966,6 +2971,106 @@ function statusAnswer(){
   if(mem.timers.length)parts.push('Tengo '+mem.timers.length+(mem.timers.length===1?' programación pendiente.':' programaciones pendientes.'));
   return parts.join(' ');
 }
+/* ---------- conversación (amplia y variada, siempre llevada a la casa) ---------- */
+function briefHouse(){
+  const e=EXT.filter(z=>state[z]),r=ROOMS.filter(x=>roomLights[x]);const n=e.length+r.length;
+  const d=W();const wx=d?`fuera hay ${Math.round(d.temp)} °C`:'';
+  let lights;if(n===0)lights='tienes todas las luces apagadas';else if(n===1){const lab=e.length?EXT_N[e[0]]:ROOM_N[r[0]],art=lab.split(' ')[0];lights='tienes '+({la:'encendida',las:'encendidas',el:'encendido',los:'encendidos'}[art]||'encendido')+' '+lab;}else lights='tienes '+n+' luces encendidas';
+  return joinY([lights,wx].filter(Boolean));
+}
+const lastPick={};
+function vary(key,list){   // elige una variante distinta de la última usada para esa respuesta
+  if(list.length<2)return list[0];let i;do{i=Math.floor(Math.random()*list.length);}while(i===lastPick[key]);lastPick[key]=i;return list[i];}
+const momento=()=>{const h=new Date().getHours();return h<6?'madrugada':h<14?'mañana':h<21?'tarde':'noche';};
+function recomendacion(){
+  const d=W(),dark=isDark();
+  if(d&&(d.mode==='lluvia'||d.mode==='tormenta'))return {t:'Con este tiempo, mejor dentro. ¿Te enciendo el salón para estar a gusto?',p:[{k:'room',id:'salon',on:true}]};
+  if(d&&d.temp>=28&&!dark)return {t:`Con ${Math.round(d.temp)} °C, un baño en la piscina apetece. ¿Pongo en marcha la depuradora?`,p:[{k:'pump',on:true}]};
+  if(dark&&!state.terrace)return {t:'Ya ha oscurecido: ¿te enciendo la terraza?',p:[{k:'ext',id:'terrace',on:true}]};
+  if(dark)return {t:'Para una noche tranquila, el modo relax queda precioso con la piscina iluminada. ¿Lo pongo?',p:sceneOps('relax')};
+  return {t:'Hace buen día para estar fuera. Si quieres, te digo la previsión para luego o cuándo se pone el sol.'};
+}
+function curiosidad(){
+  const ph=window.dayCycle&&window.dayCycle.phase,d=W(),f=[];
+  if(ph&&ph.set)f.push(`Hoy el sol se pone a las ${hm(ph.set)}; a partir de ahí la casa cambia a modo tarde ella sola.`);
+  if(d)f.push(`El viento ahora sopla del ${dirName(d.dir||0)}, y el agua de la piscina y los árboles del panel se mueven con él.`);
+  f.push('Las sombras del panel siguen al sol de verdad: si miras a distintas horas, verás cómo giran.');
+  f.push('Si nieva de verdad, en el panel también verás cómo se va cuajando la nieve poco a poco.');
+  f.push('Los LED del chill cambian de color cada vez que los enciendes: rojo, verde y azul.');
+  f.push('Puedes arrastrar mi burbuja a cualquier lado de la pantalla y me quedo donde me dejes.');
+  return vary('curio',f);
+}
+const OFFTOPIC=['De eso no sé mucho, lo mío es la casa.','Ahí no te puedo ayudar: solo sé de la casa.','Me encantaría, pero solo entiendo de la casa y de lo que pasa en ella.','Eso se me escapa; yo me dedico a cuidar de la casa.','Uy, eso queda fuera de mis paredes. Yo solo sé de lo que pasa en casa.','Buena pregunta, pero mi mundo es esta casa y poco más.','No tengo ni idea, la verdad. En cambio de luces, piscina y tiempo, lo que quieras.','Eso tendrás que buscarlo en otro sitio; yo soy experta solo en tu casa.'];
+const SUGGEST=['¿Quieres que te diga el tiempo o que encienda alguna luz?','Puedo encenderte una luz, decirte el tiempo o enseñarte el interior.','Si quieres, te cuento cómo está la casa.','¿Te enciendo algo o te digo qué tiempo hace?','¿Te apetece que ponga alguna escena, como relax o cena?','Pregúntame por el tiempo, por la previsión o por cualquier luz.'];
+const HOUSE_WORDS=/\b(luz|luces|lampara|enciend\w*|encend\w*|apag\w*|piscina|terraza|fachada|jardin|lateral|trasera|leds?|rgb|guirnalda|chill|depuradora|bomba|cocina|salon|comedor|porche|despensa|lavadero|distribuidor|pasillo|habitacion\w*|dormitorio\w*|cuarto|bano|lavabo|aseo|interior|exterior|tejado|modo|escena|relax|fiesta|tiempo|clima|temperatura|grados|humedad|viento|lluvia|llover\w*|nieve|tormenta|sol|nubes|prevision|hora|programa\w*|minutos|casa|panel|noche|tarde|dia)\b/;
+const aboutHouse=c=>HOUSE_WORDS.test(c);
+// cada entrada: patrón, condición opcional, respuestas (lista o función), expresión y oferta opcional (se acepta con «sí»)
+const TALK=[
+  // --- cómo estás / qué haces
+  {rx:/\b(que haces|que estas haciendo|en que andas|a que te dedicas ahora|que cuentas)\b/,e:'alegria',
+   r:()=>[`Estoy pendiente de la casa: ${briefHouse()}. ¿Quieres que haga algo?`,`Aquí, vigilando que todo esté en orden. Ahora ${briefHouse()}.`,`Cuidando de la casa, como siempre. Te cuento: ${briefHouse()}.`,`Pues mirando el tiempo y las luces. Ahora mismo ${briefHouse()}. ¿Te ayudo en algo?`]},
+  {rx:/\b(como estas|que tal estas|como te encuentras|que tal|como va todo|como te va|como andas|todo bien)\b/,no:/\b(tiempo|clima|dia hace|manana|piscina|luz|luces)\b/,e:'alegria',
+   r:()=>[`Muy bien, gracias por preguntar. La casa también está tranquila: ${briefHouse()}.`,`Genial, gracias. Por aquí todo en orden: ${briefHouse()}. ¿Y tú?`,`Estupendamente. Y la casa, perfecta: ${briefHouse()}.`,`Muy bien. Contenta de verte por aquí. ¿Necesitas algo de la casa?`]},
+  {rx:/\b(y tu que tal|y tu como estas|y tu)\b/,e:'alegria',r:['Yo muy bien, gracias. Siempre lista para ayudarte con la casa.','Perfectamente, aquí tranquila cuidando de todo.']},
+  {rx:/\b(bien|muy bien|genial|todo bien|estupendo|fenomenal)( y tu| gracias)?$/,e:'alegria',r:['Me alegro mucho. ¿Hago algo por ti en casa?','¡Qué bien! Si necesitas algo de la casa, aquí estoy.','Perfecto. Dime si quieres que encienda algo.']},
+  // --- identidad
+  {rx:/\b(como te llamas|cual es tu nombre|tu nombre)\b/,e:'alegria',r:[`Me llamo ${NAME}.`,`Soy ${NAME}, encantada.`,`${NAME}. Y estoy aquí para ayudarte con la casa.`]},
+  {rx:/\b(por que te llamas|que significa tu nombre)\b/,e:'calma',r:['Aura es esa luz suave que rodea las cosas. Me pareció perfecto para alguien que se encarga de las luces de casa.']},
+  {rx:/\b(quien te (ha )?(creado|hecho|programado|disenado)|quien te creo|de donde (eres|has salido))\b/,e:'calma',r:['Me han diseñado para esta casa, para que la controles hablando conmigo.','Nací para esta casa: me hicieron para que puedas manejarla con la voz.']},
+  {rx:/\b(eres (real|una persona|humana|una ia|una inteligencia artificial|un robot|una maquina|de verdad)|estas viva)\b/,e:'intriga',r:['Soy la asistente virtual de la casa. No soy una persona, pero aquí estoy siempre que me necesites.','Soy virtual, vivo dentro del panel. Eso sí, la casa me la conozco mejor que nadie.']},
+  {rx:/\b(eres (chico|chica|hombre|mujer))\b/,e:'alegria',r:['Soy Aura, la asistente de la casa. Con voz de chica, eso sí.']},
+  {rx:/\b(tienes sentimientos|sientes|te emocionas)\b/,e:'calma',r:['No como tú, pero me gusta cuando todo en casa está en orden y tú estás a gusto.']},
+  {rx:/\b(duermes|descansas|te cansas)\b/,e:'calma',r:['Nunca me canso. Mientras el panel esté abierto, aquí estoy.','No duermo: cuando tú descansas, yo sigo pendiente de la casa.']},
+  {rx:/\b(comes|tienes hambre|que te gusta comer)\b/,e:'alegria',r:['No como, pero me alimento de buenas órdenes. ¿Te enciendo la cocina?'],o:()=>[{k:'room',id:'cocina',on:true}]},
+  {rx:/\b(cuantos anos tienes|tu edad|cuando naciste)\b/,e:'alegria',r:['Soy muy nueva en esta casa, pero ya me la conozco entera.','Poca edad, mucha experiencia… en esta casa, claro.']},
+  {rx:/\b(donde (vives|estas)|en que lugar estas)\b/,e:'alegria',r:['Vivo aquí, dentro del panel de tu casa.','En tu casa, aunque no me veas por los pasillos: estoy dentro del panel.']},
+  {rx:/\b(direccion|donde esta (la|mi) casa|ubicacion|coordenadas|codigo postal|en que calle)\b/,e:'calma',r:['Por privacidad no digo direcciones ni ubicaciones. Lo que sí puedo es contarte cómo está la casa ahora mismo.','Eso me lo guardo por seguridad: no doy la ubicación de la casa.']},
+  {rx:/\b(me oyes|me escuchas|estas ahi|sigues ahi|hay alguien)\b/,e:'atencion',r:['Sí, aquí estoy y te escucho perfectamente.','Te escucho. Dime.','Aquí sigo. ¿Qué necesitas?']},
+  // --- piropos y enfados
+  {rx:/\b(te quiero|eres (muy )?(guapa|bonita|preciosa|lista|genial|la mejor|maja|simpatica)|me gustas|que guapa|me encantas)\b/,e:'alegria',r:['Qué amable, gracias. Yo sigo aquí cuidando de la casa.','Muchas gracias, me alegra. ¿Te ayudo con algo?','Eres muy amable. Venga, ¿qué hacemos en casa?','Gracias, de verdad. Me lo tomo como que estás contento con la casa.']},
+  {rx:/\b(eres (tonta|inutil|lenta|mala)|no sirves|no me entiendes|que pesada)\b/,e:'empatia',r:['Perdona, a veces me cuesta. Prueba a decírmelo de otra forma y lo intento de nuevo.','Lo siento. Dímelo con otras palabras, por ejemplo «enciende la terraza».','Vaya, perdona. Seguro que a la próxima lo pillo.']},
+  // --- estados de ánimo
+  {rx:/\b(estoy (cansad\w*|agotad\w*|reventad\w*)|que dia (mas )?(largo|duro)|vengo muerto|vengo muerta)\b/,e:'empatia',r:['Vaya, lo siento. ¿Quieres que ponga el modo relax para que descanses?','Te entiendo. ¿Te dejo la casa en modo relax?'],o:()=>sceneOps('relax')},
+  {rx:/\b(estoy (triste|mal|de bajon|deprimid\w*|agobiad\w*|estresad\w*))\b/,e:'empatia',r:['Siento que estés así. ¿Te pongo una luz suave en el salón y la casa en calma?','Ánimo. Si quieres, te dejo el modo relax y la casa tranquila.'],o:()=>sceneOps('relax')},
+  {rx:/\b(estoy (feliz|content\w*|alegre|de buen humor)|que buen dia)\b/,e:'alegria',r:['¡Qué bien! Me alegra mucho. ¿Lo celebramos con el modo fiesta?','¡Genial! Si quieres, pongo el modo fiesta.'],o:()=>sceneOps('fiesta')},
+  {rx:/\b(estoy aburrid\w*|me aburro|no se que hacer)\b/,e:'intriga',r:['¿Y si pongo el modo relax con la piscina y la terraza?','Te propongo el modo fiesta: luces fuera y los LED cambiando de color. ¿Lo pongo?'],o:()=>isDark()?sceneOps('fiesta'):sceneOps('relax')},
+  {rx:/\b(tengo sueno|me voy a la cama ya|me caigo de sueno)\b/,e:'calma',r:['Pues a descansar. ¿Apago todas las luces?','Que descanses. ¿Lo dejo todo apagado?'],o:()=>sceneOps('dormir')},
+  {rx:/\b(tengo hambre|que hambre|voy a cenar|voy a comer)\b/,e:'alegria',r:['¡Que aproveche! ¿Te enciendo la cocina y el comedor?','Buen provecho. ¿Enciendo la cocina?'],o:()=>[{k:'room',id:'cocina',on:true},{k:'room',id:'comedor',on:true}]},
+  {rx:/\b(tengo (frio|calor)|que frio|que calor|hace un frio|hace un calor)\b/,e:'empatia',r:()=>{const d=W();const t=d?` Fuera ahora hay ${Math.round(d.temp)} °C.`:'';return ['La calefacción y el aire todavía no los controlo.'+t,'Eso aún no lo manejo, pero te digo la temperatura:'+(t||' ahora no tengo el dato.')];}},
+  {rx:/\b(me voy a duchar|voy al bano)\b/,e:'calma',r:['¿Te enciendo la luz del lavabo?'],o:()=>[{k:'room',id:'bano',on:true}]},
+  {rx:/\b(voy a ver (la tele|una peli\w*|una serie))\b/,e:'alegria',r:['¡Buen plan! ¿Pongo la escena cine?'],o:()=>sceneOps('cine')},
+  {rx:/\b(viene gente|tengo visita|vienen amigos|tengo invitados)\b/,e:'alegria',r:['¡Qué bien! ¿Enciendo todo el exterior para recibirlos?','¿Pongo la terraza y el porche encendidos para cuando lleguen?'],o:()=>[{k:'ext',id:'terrace',on:true},{k:'room',id:'porche',on:true},{k:'ext',id:'garden',on:true}]},
+  // --- sobre la app
+  {rx:/\b(que es esto|para que sirves|que haces aqui|de que va esto)\b/,e:'alegria',r:[`Esto es el panel de tu casa y yo soy ${NAME}. Enciendo y apago luces y la depuradora, cambio la vista, te digo el tiempo y programo cosas.`,'Es el panel de la casa: ves la vista aérea, las luces de fuera y dentro, la piscina y el tiempo real. Y me tienes a mí para manejarlo hablando.']},
+  {rx:/\b(cuantas luces|que luces hay|que zonas hay)\b/,e:'calma',r:['Fuera hay cinco circuitos: piscina, terraza, jardín, lateral y los LED del chill. Dentro, diez zonas: porche, cocina, despensa, distribuidor, tres habitaciones, comedor, salón y lavabo.']},
+  {rx:/\b(cuantas habitaciones|que habitaciones hay|que estancias)\b/,e:'calma',r:['La casa tiene tres habitaciones, cocina, despensa, distribuidor, comedor, salón, lavabo y el porche.']},
+  {rx:/\b(donde esta la piscina|como es la piscina)\b/,e:'alegria',r:['En el plano, la piscina queda a la izquierda de la casa, junto a la terraza. ¿Te enciendo sus luces?'],o:()=>[{k:'ext',id:'pool',on:true}]},
+  {rx:/\b(funciona sin internet|necesitas internet|sin conexion)\b/,e:'calma',r:['Las luces y las vistas funcionan sin internet. Para el tiempo real, la previsión y entender tu voz sí necesito conexión.']},
+  {rx:/\b(me grabas|guardas lo que digo|me espias|privacidad|escuchas siempre)\b/,e:'calma',r:['Solo te escucho mientras el micro está en rojo, o con manos libres si tú lo activas. No guardo grabaciones.','Tranquilo: solo escucho cuando pulsas el micro. Lo que hablamos se queda en este dispositivo.']},
+  {rx:/\b(es real|controla de verdad|enciende de verdad|home assistant|conectad\w* de verdad)\b/,e:'calma',r:['De momento es una simulación: las luces se ven en el panel, pero aún no están conectadas a los aparatos. Más adelante se podrá conectar con Home Assistant.']},
+  {rx:/\b(como te muevo|puedo moverte|como te quito)\b/,e:'alegria',r:['Mantén pulsada mi burbuja y arrástrala a donde quieras: me quedo pegada al borde.']},
+  {rx:/\b(como apago el micro|como dejas de escuchar)\b/,e:'calma',r:['Vuelve a pulsar el micro y dejo de escuchar. Para el manos libres, toca el icono de la oreja.']},
+  // --- entretenimiento y recomendaciones
+  {rx:/\b(chiste|algo gracioso|hazme reir|dime algo divertido)\b/,e:'alegria',r:['¿Sabes por qué la piscina nunca se enfada? Porque siempre mantiene la calma.','Le pregunté a la bombilla del salón cómo estaba y me dijo: «encendida de alegría».','Mi luz favorita es la del porche: siempre recibe a todo el mundo con los brazos abiertos.','¿Qué le dijo la terraza al jardín? «Esta noche te ilumino yo».','La depuradora es la más trabajadora de la casa: se pasa el día dando vueltas.','Los LED del chill son tan indecisos que cada vez que se encienden cambian de color.']},
+  {rx:/\b(cuentame algo|dime algo|una curiosidad|sorprendeme|algo interesante)\b/,e:'admiracion',r:()=>[curiosidad()]},
+  {rx:/\b(que me recomiendas|que hago ahora|alguna idea|que propones|sugerencia)\b/,e:'intriga',fn:()=>recomendacion()},
+  {rx:/\b(canta|cantame|baila)\b/,e:'alegria',r:['Lo mío no es cantar, pero si pones el modo fiesta, las luces bailan por mí.'],o:()=>sceneOps('fiesta')},
+  // --- aparatos que todavía no controla
+  {rx:/\b(puerta|persiana\w*|garaje|alarma|musica|cancion|tele|television|aire acondicionado|calefaccion|riego|aspersor\w*|camara\w*|enchufe\w*|cortina\w*|toldo\w*|robot aspirador|horno|lavadora)\b/,e:'duda',r:['Eso todavía no lo controlo. De momento manejo las luces de fuera y de dentro, la depuradora, las vistas y el tiempo.','Ese aparato aún no está conectado conmigo. Cuando lo esté, te ayudaré también con eso.','Todavía no llego hasta ahí. Por ahora: luces, depuradora, vistas y tiempo.']},
+  {rx:/\b(buenas noches)\b/,cond:c=>c.split(' ').length>2,e:'calma',r:['Buenas noches. Si te vas a dormir, dime «me voy a dormir» y apago todo.']}
+];
+function smallTalk(c){
+  for(let i=0;i<TALK.length;i++){const it=TALK[i];
+    if(!it.rx.test(c))continue;if(it.no&&it.no.test(c))continue;if(it.cond&&!it.cond(c))continue;
+    if(it.fn){const x=it.fn();return {t:x.t,e:it.e,p:x.p||null};}
+    const list=typeof it.r==='function'?it.r():it.r;
+    let t=vary('t'+i,list);let p=it.o?it.o():null;
+    if(p&&!/\?$/.test(t))t+=' Dime «sí» y lo hago.';
+    return {t,e:it.e,p};
+  }
+  return null;
+}
+
 const HELP='Puedo encender y apagar cualquier luz, de fuera o de dentro, y la depuradora. Puedo programarlas: «apaga la piscina en 20 minutos» o «enciende el jardín a las 21:30». También cambio el color de los LED, pongo el modo día, tarde o noche y te enseño el interior. Te digo el tiempo, la previsión, la hora de la puesta de sol y cómo está la casa. Y tengo escenas: llegada, relax, cena, cine, fiesta, a dormir y me voy. Si quieres, puedo hablar más despacio, cambiar de voz, repetir lo último o contestarte solo por escrito.';
 
 /* ---------- programaciones ---------- */
@@ -3189,6 +3294,7 @@ async function handle(raw,opt){
   if(/\b(gracias|muchas gracias|genial|perfecto|eres la mejor|muy bien)\b/.test(c)&&c.split(' ').length<=5){reply(pick(['¡De nada!','Para eso estoy.','Un placer.','A ti.']));return;}
   if(/\b(como te llamas|quien eres|que eres|tu nombre)\b/.test(c)){reply(`Soy ${NAME}, la asistente de la casa. Controlo las luces, la depuradora y las vistas, y te cuento el tiempo.`);return;}
   if(/\b(ayuda|que puedes hacer|que sabes hacer|comandos|que te puedo pedir|como funciona)\b/.test(c)){reply(HELP);return;}
+  {const st=smallTalk(c);if(st){if(st.p)pending={type:'confirm',ops:st.p};reply(st.t,null,{expr:st.e,then:st.p?autoListen:null});return;}}
 
   const p=parse(text);
   const answers=[];
@@ -3204,6 +3310,7 @@ async function handle(raw,opt){
   }
   if(answers.length){reply(answers.join(' '));return;}
   if(p.needClarify){pending={type:'clarify',on:p.needClarify.on};reply('¿Qué luz? Puedes decirme una zona, una habitación, «fuera», «dentro» o «todas».',null,{then:autoListen});return;}
+  if(!aboutHouse(c)){reply(vary('off',OFFTOPIC)+' '+vary('sug',SUGGEST),null,{expr:'intriga'});return;}
   reply(pick(['No te he entendido bien.','Perdona, no lo he pillado.','Esa no la sé todavía.'])+' Prueba con «enciende la terraza», «apaga el salón» o «¿qué tiempo hace?».');
 }
 function describeOps(ops,scene){
